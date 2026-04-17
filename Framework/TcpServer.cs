@@ -19,9 +19,11 @@ public class RequestContext
 public class TcpServer
 {
     private readonly int _port;
-    public TcpServer(int port)
+    private readonly Router _router;
+    public TcpServer(int port, Router router)
     {
         _port = port;
+        _router = router;
     }
 
     public async Task StartAsync()
@@ -33,7 +35,6 @@ public class TcpServer
         while(true)
         {
             var client = await listener.AcceptTcpClientAsync();
-
             _ = Task.Run(() => HandleClient(client));
         }
     }
@@ -45,16 +46,12 @@ public class TcpServer
 
         var byteCount = await stream.ReadAsync(buffer);
         var requestText = Encoding.UTF8.GetString(buffer, 0, byteCount);
-        
         var lines = requestText.Split("\r\n");
-        foreach(var line in lines)
-        {
-            Console.WriteLine(line);
-        }
+        
         var requestLine = lines[0].Split(" ");
         RequestContext context = new(requestLine[0], requestLine[1]);
 
-        string responseText = "Method: " + context.Method + "\nPath: " + context.Path;
+        string responseText = _router.Resolve(context);
         var responseByte = Encoding.UTF8.GetBytes(
             "HTTP/1.1 200 OK\r\nContent-Length: " +
             responseText.Length +

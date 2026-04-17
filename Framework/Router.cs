@@ -17,7 +17,8 @@ public class Router
     public string Resolve(RequestContext ctx)
     {
         var endpoint = _endpoints.FirstOrDefault(ep => ep.Matches(ctx));
-
+        
+        Console.WriteLine($"Received {ctx.Method} request for {ctx.Path}. Resolved to: {(endpoint != null ? endpoint.Path : "No match")}");
         return endpoint != null
             ? endpoint.Handler(ctx)
             : "404 Not Found";
